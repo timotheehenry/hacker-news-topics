@@ -11,6 +11,9 @@ t[, month := lubridate::month(date)]
 
 # get topic from each title
 # ------
+# 1. concatenate all title
+
+# 2. count each word
 all_titles <- paste(t$title, collapse = " ")
 
 # count all words
@@ -21,7 +24,6 @@ word_counts <- data.table(word = words)[, .N, by = word]
 word_counts = word_counts[order(-N)]
 
 # 3. eliminate all uninformative words
-# or rather select words
 topics = c("Google", "Facebook", "Apple","Linux","Python","US","Amazon","Microsoft","U.S.","Javascript","Programming","Windows","Android","Internet","App","AI",
            "Bitcoin","China","iPhone","Rust","Github","Tesla","iOS","Game","Chrome","AWS","Firefox","Mac","Cloud","Ruby","Chinese","UK","C++","browser","Youtube","3D",
            "Lisp","Intel","Deep","Java","Uber","Covid-19","California","Elon","Video","Social","CSS","Store","website","Engine","Apps","NSA","Russian","Git","platform",
@@ -36,9 +38,12 @@ topics = c("Google", "Facebook", "Apple","Linux","Python","US","Amazon","Microso
            "GitHub","Github","github","jQuery","FDIC","YouTube","Copilot","NumPy")
 
 
+# I have a list of words called topics. Remove all words from dt$title that are not in this list.
+
 # Replace commas with spaces in the title column
 t[, title := gsub(",", " ", title)]
 t[, title := gsub("'", " ", title)]
+
 
 
 # Function to keep only words from the topics list
@@ -52,42 +57,31 @@ keep_only_topics <- function(title, topics) {
 # Apply the function to modify titles
 t[, modified_title := sapply(title, keep_only_topics, topics)]
 
-# merge of topics
+# cleanup
 t[, modified_title := gsub("US", "U.S.", modified_title)]
+
 
 
 # proporition of rows where at least one topic is found
 nrow(t[modified_title != ""]) / nrow(t)
 # 34%
 
+t[title=="Why Amazon  Apple  Facebook  and Google Need to Be Disrupted"]
+
 # explode modified_title to have one row per word from that string
 exploded_dt <- t[, .(word = unlist(strsplit(modified_title, " "))), by = list(year,month)]
+
 
 tg = exploded_dt[, .N, by=list(year, month, word)]
 tg = tg[order(year,month,-N)]
 tg[, .SD[1], by=list(year,month)]
 
-# ====================
-# keep only top topic
-# ====================
 tg1 = tg[, .SD[1], by=list(year,month)]
-
-# ====================
-# display all top topics
-# ====================
 tg1[, word]
 
-#[1] "YouTube"  "Startup"  "Startup"  "Google"   "Google"   "Google"   "Facebook" "Facebook" "Google"   "YC"       "Google"   "Google"   "Google"   "Google"   "Google"  
-#[16] "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"  
-#[31] "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"  
-#[46] "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"  
-#[61] "Google"   "Google"   "Google"   "Google"   "Facebook" "Google"   "Google"   "Google"   "Apple"    "Google"   "Google"   "Google"   "Google"   "Google"   "Google"  
-#[76] "Google"   "Google"   "NSA"      "NSA"      "NSA"      "NSA"      "Google"   "Bitcoin"  "Bitcoin"  "Google"   "Google"   "Google"   "Google"   "Google"   "Google"  
-#[91] "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"  
-#[106] "Google"   "Google"   "Google"   "Google"   "Apple"    "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Trump"    "Google"  
-#[121] "Trump"    "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Bitcoin"  "Bitcoin"  "Google"   "Google"   "Facebook"
-#[136] "Facebook" "Google"   "GitHub"   "Google"   "Google"   "Google"   "Google"   "Google"   "U.S."     "Google"   "Google"   "Google"   "Google"   "Google"   "Google"  
-#[151] "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "Covid-19" "Covid-19" "Covid-19" "Apple"    "U.S."     "U.S."     "U.S."    
-#[166] "Google"   "Apple"    "Google"   "Google"   "Google"   "Google"   "Google"   "Google"   "U.S."     "U.S."     "Apple"    "Apple"    "Facebook" "U.S."     "U.S."    
-#[181] "Google"   "Ukraine"  "Ukraine"  "Twitter"  "U.S."     "U.S."     "U.S."     "U.S."     "U.S."     "Twitter"  "Twitter"  "Twitter"  "U.S."     "AI"       "AI"      
-#[196] "AI"  
+# long to wide
+wide_table <- dcast(tg1, year ~ month, value.var = "word")
+
+# replace NAs
+wide_table[is.na(wide_table)] <- ""
+
