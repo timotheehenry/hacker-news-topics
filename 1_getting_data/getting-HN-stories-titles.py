@@ -28,7 +28,7 @@ one_week = 7 * one_day
 
 INTERVAL = one_week
 
-for i in range(101,1000):
+for i in range(200):
   print("i = ", i)
   time_1 = current_unix_timestamp - i * INTERVAL
   time_2 = time_1 + INTERVAL
