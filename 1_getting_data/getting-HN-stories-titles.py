@@ -28,7 +28,7 @@ one_week = 7 * one_day
 
 INTERVAL = one_week
 
-for i in range(200):
+for i in range(100):
   print("i = ", i)
   time_1 = current_unix_timestamp - i * INTERVAL
   time_2 = time_1 + INTERVAL
@@ -46,5 +46,5 @@ df = df.drop_duplicates(subset=('title'))
 df = df[df.title != ""]
 
 # save dataset
-df.to_csv("./hn-50-points-stories-2006-10-09-to-2023-08-31.csv")
-
+os.chdir("C:\\Users\\HENRY_T\\Desktop\\Tim\\0_HackerNews")
+df.to_csv("./hn-50-points-stories-2023-06-26-to-2025-07-04.csv")
